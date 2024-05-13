@@ -1,7 +1,9 @@
 ### IntelliJ IDEA ###
-out/
+Term3Proj/SocialNework/out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea
+*.iml
 
 ### Eclipse ###
 .apt_generated
