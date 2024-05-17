@@ -6,7 +6,7 @@ import java.util.Set;
 public class Person     
 {
     private String name;
-    private Set<String> followers;
+    private Set<Person> followers;
 
     public Person(String name) 
     {
@@ -19,12 +19,12 @@ public class Person
         return name;
     }
 
-    public void addFollower(String follower) 
+    public void addFollower(Person follower)
     {
         followers.add(follower);
     }
 
-    public Set<String> getFollowers() 
+    public Set<Person> getFollowers()
     {
         return followers;
     }

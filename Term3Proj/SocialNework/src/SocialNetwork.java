@@ -3,42 +3,20 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.HashMaps;
 import java.util.Set;
-// test1
+
 public class SocialNetwork
 {
-    //private Map<String, Set<String>> socialNetwork;
+
     private HashMap<String, Set<String>> socialNetwork;
 
-    public SocialNetwork()
+    public SocialNetwork(HashMap<String, Set<String>> socialNetwork)
     {
-        this.socialNetwork = new HashMap<String, Set<String>>();
-    }
-   private void loadSocialNetwork(String filePath)
-    {
-        try {
-            Scanner scanner = new Scanner(new File(filePath));
-
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] people = line.split(" ");
-                String name = people[0];
-                //Set<String> followers = Arrays.asList(people).subList(1, people.length);
-                Set<String> followers = new HashSet<>(Arrays.asList(people).subList(1, people.length));
-
-                socialNetwork.put(name, followers);
-            }
-
-            scanner.close();
-        } catch (FileNotFoundException e)
-        {
-            System.out.println("file not founds");
-        }
+        this.socialNetwork = socialNetwork;
     }
 
     // Task 1: Calculate the density of the graph
-    public double calculateGraphDensity()
+    public double GraphDensity()
     {
         int numNodes = socialNetwork.size();
         int numEdges = 0;
@@ -51,19 +29,29 @@ public class SocialNetwork
 
     // Task 2: Find the person with the most followers
     public String MostFollowedPerson()
-    {
-        int maxFollowers = 0;
-        String MostFollowedPerson = "";
+    { // Method to find the person whose name appears the most times in the map
+        Map<String, Integer> nameCount = new HashMap<>(); // Map to store the count of occurrences of each person's name
         for (Map.Entry<String, Set<String>> entry : socialNetwork.entrySet())
-        {
-            int numFollowers = entry.getValue().size();
-            if (numFollowers > maxFollowers || (numFollowers == maxFollowers && entry.getKey().compareTo(MostFollowedPerson) < 0))
-            {
-                maxFollowers = numFollowers;
-                MostFollowedPerson = entry.getKey();
+        {// Looping through each entry in the social network map
+            String person = entry.getKey(); // Getting the person's name
+            nameCount.put(person, nameCount.getOrDefault(person, 0) + 1); // Incrementing the count for the person's name
+            for (String follower : entry.getValue())
+            { // Looping through each follower of the person
+                nameCount.put(follower, nameCount.getOrDefault(follower, 0) + 1); // Incrementing the count for the follower's name
             }
         }
-        return MostFollowedPerson;
+        int maxCount = 0; // Initializing the maximum count
+        String MostFollowedPerson = ""; // Initializing the person with the most followers
+        for (Map.Entry<String, Integer> entry : nameCount.entrySet())
+        {
+            // Checking if the current person has more occurrences or if they have the same number of occurrences but come earlier alphabetically
+            if (entry.getValue() > maxCount || (entry.getValue() == maxCount && entry.getKey().compareTo(MostFollowedPerson) < 0))
+            {
+                maxCount = entry.getValue(); // Updating the maximum count
+                MostFollowedPerson = entry.getKey(); // Updating the person with the most occurrences
+            }
+        }
+        return MostFollowedPerson; // Returning the person with the most occurrences
     }
 
     // Task 3: Find the person who follows the most people
@@ -84,22 +72,28 @@ public class SocialNetwork
     }
 
     // Task 4: Calculate the number of people at two degrees of separation from the first person
-    public int numPeopleAtTwoDegrees(String firstPerson)
-    {
-        Set<String> firstPersonFollowers = socialNetwork.get(firstPerson);
-        Set<String> secondDegreePeople = new HashSet<>();
+    public int numPeopleAtTwoDegrees()
+    {  // Find the alphabetically first person in the network
+        String firstPerson = socialNetwork.keySet().stream().min(String::compareTo).orElse(null);
+
+        if (firstPerson == null)
+        {
+            return 0; // Return 0 if the network is empty
+        }
+        Set<String> firstPersonFollowers = socialNetwork.get(firstPerson); // Gets the followers of the first person
+        Set<String> PeopleAtSecondDegree = new HashSet<>(); // intializes set "PeopleAtSecondDegree"
         for (String follower : firstPersonFollowers)
         {
-            Set<String> followersOfFollower = socialNetwork.get(follower);
+            Set<String> followersOfFollower = socialNetwork.get(follower); // Gcd ets the folllowers of a follower of the firts person
             for (String followerOfFollower : followersOfFollower)
             {
                 if (!firstPersonFollowers.contains(followerOfFollower) && !followerOfFollower.equals(firstPerson))
                 {
-                    secondDegreePeople.add(followerOfFollower);
+                    PeopleAtSecondDegree.add(followerOfFollower);
                 }
             }
         }
-        return secondDegreePeople.size();
+        return PeopleAtSecondDegree.size();
     }
 
     // Task 5: Calculate the median number of followers
@@ -122,9 +116,36 @@ public class SocialNetwork
     }
 
     // Task 6: get the most followers for partnership
-    public String BrandAmbassador()
-    {
-        return MostFollowedPerson();
+    public String personForPartnership()
+    { // Method to find the brand ambassador for spreading information
+        String brandAmbassador = ""; // Initialize the brand ambassador
+        int maxUniqueRecipients = 0; // Initialize the maximum number of unique recipients
+        for (String person : socialNetwork.keySet())
+        { // Iterate through each person in the social network
+            Set<String> visited = new HashSet<>(); // Set to track visited individuals to avoid message redundancy
+            Queue<String> queue = new LinkedList<>(); // Queue for breadth-first traversal
+            queue.offer(person); // Add the current person to the queue
+            visited.add(person); // Mark the current person as visited
+            int uniqueRecipients = 0; // Initialize the number of unique recipients for the current person
+            while (!queue.isEmpty()) { // Continue traversal while the queue is not empty
+                String currentPerson = queue.poll(); // Retrieve the current person from the queue
+                Set<String> followers = socialNetwork.get(currentPerson); // Get the followers of the current person
+                for (String follower : followers)
+                { // Iterate through each follower of the current person
+                    if (!visited.contains(follower))
+                    { // Check if the follower has not been visited before
+                        queue.offer(follower); // Add the follower to the queue for traversal
+                        visited.add(follower); // Mark the follower as visited
+                        uniqueRecipients++; // Increment the number of unique recipients
+                    }
+                }
+            }
+            int currentRecipients = maxUniqueRecipients-1;
+            if (uniqueRecipients > currentRecipients) { // Check if the current person has more unique recipients than the current maximum
+                currentRecipients = uniqueRecipients; // Update the maximum number of unique recipients
+                brandAmbassador = person; // Update the brand ambassador
+            }
+        }
+        return brandAmbassador; // Return the brand ambassador for spreading information
     }
-
 }
